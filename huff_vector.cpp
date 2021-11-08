@@ -14,9 +14,10 @@ public:
     Node* Left;
     Node* Right;
     int asciiIndex;
+    int priority = -1;
 //    bool isLeaf; // decide if its a leaf when building a tree
 
-    static Node* createNode(unsigned char ch, unsigned freq, Node* l, Node* r);
+    static Node* createNode(unsigned char ch, unsigned freq, Node* l, Node* r, int priority);
     ~Node();
 };
 
@@ -26,13 +27,14 @@ Node::~Node() {
     delete Right;
 }
 
-Node* Node::createNode(unsigned char ch, unsigned int freq, Node* l, Node* r) {
+Node* Node::createNode(unsigned char ch, unsigned int freq, Node* l, Node* r, int priority) {
     Node* node = new Node();
     node->character = ch;
     node->frequency = freq;
     node->Left = l;
     node->Right = r;
     node->asciiIndex = int(ch);
+    node->priority = priority;
 //        isLeaf = false;
     return node;
 }
@@ -59,9 +61,9 @@ bool combinedComparison(const pair<unsigned char, int> &a, const pair<unsigned c
 
 bool combinedComparisonNodes(Node* a, Node* b) {
     if(a->frequency == b->frequency){
-        int asciiIntA = int(a->character);
-        int asciiIntB = int(b->character);
-        return asciiIntA < asciiIntB;
+        int priorityA = int(a->priority);
+        int priorityB = int(b->priority);
+        return priorityA < priorityB;
     }
     else{
         return a->frequency < b->frequency;
@@ -144,7 +146,10 @@ void Huffman1Tree::creatingTheTree() {
     // here we are pushing all the leaf nodes to the priority queue
     for(int i = 0; i < characterFrequencyVector.size(); i++){
         unsigned char tempChar = characterFrequencyVector[i].first;
-        Node* internalNodeLeaf = Node::createNode(tempChar, characterFrequencyVector[i].second, nullptr, nullptr);
+        cout << tempChar << ": ";
+        int priorityAsciiChar = int(characterFrequencyVector[i].first);
+        cout << priorityAsciiChar << endl;
+        Node* internalNodeLeaf = Node::createNode(tempChar, characterFrequencyVector[i].second, nullptr, nullptr, priorityAsciiChar);
         nodeVector.push_back(internalNodeLeaf);
     }
 
@@ -163,7 +168,7 @@ void Huffman1Tree::creatingTheTree() {
 
 //      creating an internal node with the frequency equal to the sum of the left and right nodes
         int internalFrequency = left->frequency + right->frequency;
-        Node* internalNode = Node::createNode('$', internalFrequency, left, right);
+        Node* internalNode = Node::createNode('$', internalFrequency, left, right, left->asciiIndex + right->asciiIndex);
 //        internalNode->createNode('$', internalFrequency, left, right); //'$' is a special value for internal nodes, not use
 //      add this new node to the priority queue
         nodeVector.push_back(internalNode);
