@@ -72,24 +72,28 @@ bool combinedComparisonNodes(Node* a, Node* b) {
 
 class Huffman1Tree{
 public:
+    string inputString;
     unsigned treeSize; //current size of the huffman tree
     unsigned treeCapacity; //capacity of the tree
     vector<Node*> nodeVector; //vector of node pointers
     vector<pair<unsigned char, int>> characterFrequencyVector;
-    vector<Node*> NodeHeap;
     void nodeVectorPrint();
     string codeString;
+    map<unsigned char, string> codeMap;
+    map<unsigned char, string>::iterator it;
 
     Huffman1Tree();
     void sortedVectorOfCharacterFrequencyPairs(); // this stores the input in a vector that is sorted according to the frequency of the characters
     void pop_front_on_vector(vector<Node*> &nodeVect);
     Node* creatingTheTree();
     void getCodes(Node* root, string str);
-    void printCodes();
-// traversing through the tree
+    string printCodesForString();
 
 
 //    number of bits used in the original string
+
+    void countBitsOriginal();
+    void countBitsEncoded(string binaryNumber);
 
 //    number of bits used in the encoded string
 
@@ -102,7 +106,6 @@ Huffman1Tree::Huffman1Tree() {
 }
 
 void Huffman1Tree::sortedVectorOfCharacterFrequencyPairs() {
-    string inputString;
 //    getline(cin, inputString);
     inputString = "she sells sea shells by the sea shore";
     map<char, int> frequencyMap;
@@ -118,9 +121,13 @@ void Huffman1Tree::sortedVectorOfCharacterFrequencyPairs() {
 
     //this part just prints the frequency vector
     for(auto i: characterFrequencyVector){
-        cout << i.first << " " << i.second << endl;
+        cout << i.first << " ";
     }
-    cout << "*****" << endl;
+    cout << endl;
+        for(auto i: characterFrequencyVector){
+        cout << i.second << " ";
+    }
+        cout << endl;
 }
 
 void Huffman1Tree::pop_front_on_vector(vector<Node*> &nodeVect) {
@@ -151,17 +158,13 @@ Node* Huffman1Tree::creatingTheTree() {
     // here we are pushing all the leaf nodes to the priority queue
     for(int i = 0; i < characterFrequencyVector.size(); i++){
         unsigned char tempChar = characterFrequencyVector[i].first;
-        cout << tempChar << ": ";
+//        cout << tempChar << ": ";
         int priorityAsciiChar = int(characterFrequencyVector[i].first);
-        cout << priorityAsciiChar << endl;
+//        cout << priorityAsciiChar << endl;
         Node* internalNodeLeaf = Node::createNode(tempChar, characterFrequencyVector[i].second, nullptr, nullptr, priorityAsciiChar);
         nodeVector.push_back(internalNodeLeaf);
     }
 
-    cout << "before editing" << endl;
-    nodeVectorPrint();
-
-    cout << "after editing" << endl;
 //    extracting the 2 minimum leaves, adding them and pushing them to the queue
     while(nodeVector.size() != 1){
         Node* left = nodeVector.front();
@@ -184,35 +187,21 @@ Node* Huffman1Tree::creatingTheTree() {
 
         std::sort(nodeVector.begin(), nodeVector.end(), combinedComparisonNodes);
 
-        nodeVectorPrint();
+//        nodeVectorPrint();
     }
     Node* root = nodeVector[0];
     return root;
 
-
-
-
-//    //checking if all the nodes got pushed as leafs to the priority queue
-//    while(nodeVector.size() != 0){
-//        int i = 1;
-//        cout << "asdf" << " " << i << endl;
-//        cout << "its printing something dodgy here" << endl;
-////        this is what are have stored in the min heap
-//        cout << nodeVector.front()->frequency << endl;
-//        cout << nodeVector.front()->Left->frequency << endl;
-//        cout << nodeVector.front()->Right->frequency << endl;
-//
-//    }
-
 }
 
-void Huffman1Tree::getCodes(Node* root, string str) {
+void Huffman1Tree::getCodes(Node* root, string str){
     if(root == nullptr){
         return;
     }
 //    this is for when it reaches a leaf node
     if(!(root->Left) && !(root->Right)){
-        cout << root->character << " :" << str << endl;
+        codeMap[root->character] = str;
+//        cout << root->character << " :" << str << endl;
     }
     if(root->Left){
         getCodes(root->Left, str + "0");
@@ -223,19 +212,39 @@ void Huffman1Tree::getCodes(Node* root, string str) {
 
 }
 
-void Huffman1Tree::printCodes() {
-    getCodes(nodeVector[0], codeString);
+string Huffman1Tree::printCodesForString() {
+    string outputString;
+    for(auto &i: inputString){
+        it = codeMap.find(i);
+        outputString += it->second;
+    }
+    return outputString;
+}
+
+void Huffman1Tree::countBitsOriginal() {
+    unsigned int num = 0;
+    num = inputString.length()*8;
+    cout << "Total Bits (Original): " <<  num << endl;
+
+}
+
+void Huffman1Tree::countBitsEncoded(string binaryNumber) {
+    cout << "Total Bits (Coded): "  << binaryNumber.length() << endl;
+
 }
 
 
 int main(){
     Huffman1Tree test;
     string stringOfCodes;
+    string output;
     test.sortedVectorOfCharacterFrequencyPairs();
     Node* root = test.creatingTheTree();
-    cout << "freq" << endl;
-    cout << root->frequency << endl;
     test.getCodes(root, stringOfCodes);
+    output = test.printCodesForString();
+    cout << output << endl;
+    test.countBitsOriginal();
+    test.countBitsEncoded(output);
 
     return 0;
 };
