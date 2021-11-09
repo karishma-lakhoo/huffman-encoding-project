@@ -2,6 +2,7 @@
 #include <map>
 #include <algorithm>
 #include <vector>
+#include <string>
 #include <queue>
 
 
@@ -68,9 +69,11 @@ bool combinedComparisonNodes(Node* a, Node* b) {
     }
 }
 
-class Huffman1Tree{
+class HuffmanDecoder{
 public:
-    string inputString;
+    string inputKeys;
+    string inputFrequencies;
+    string inputStringEncoded = "100100011010000110111011010001111111010010000110111011011101011100110111101010001101000111111101001011101111110000";
     vector<Node*> nodeVector; //vector of node pointers
     vector<pair<unsigned char, int>> characterFrequencyVector;
     void nodeVectorPrint();
@@ -78,32 +81,40 @@ public:
     map<unsigned char, string> codeMap;
     map<unsigned char, string>::iterator it;
 
-    Huffman1Tree();
+    HuffmanDecoder();
     void sortedVectorOfCharacterFrequencyPairs(); // this stores the input in a vector that is sorted according to the frequency of the characters
     void pop_front_on_vector(vector<Node*> &nodeVect);
     Node* creatingTheTree();
     void getCodes(Node* root, string str);
-    string printCodesForString();
+    string stringDecoder(Node* root);
+    void stringDecoder2(Node* root, int &idx);
+    void outputString(Node* root);
 
 
-//    number of bits used in the original string
 
-    void countBitsOriginal();
-    void countBitsEncoded(string binaryNumber);
 
 //    number of bits used in the encoded string
 
+
 };
 
-Huffman1Tree::Huffman1Tree() {
+HuffmanDecoder::HuffmanDecoder() {
 }
 
-void Huffman1Tree::sortedVectorOfCharacterFrequencyPairs() {
-    getline(cin, inputString);
-//    inputString = "she sells sea shells by the sea shore";
+void HuffmanDecoder::sortedVectorOfCharacterFrequencyPairs() {
+    getline(cin, inputKeys);
+    getline(cin, inputFrequencies);
+
+//    inputKeys = "b o r t y a h l   e s";
+//    inputFrequencies = "1 1 1 1 1 2 4 4 7 7 8";
+    vector<int> inputFrequenciesVector;
+    for(int i = 0; i < (inputFrequencies.length()/2)+1; i++){
+        int temp = int(inputFrequencies[2*i] - 48);
+        inputFrequenciesVector.push_back(temp);
+    }
     map<char, int> frequencyMap;
-    for(char i: inputString){
-        frequencyMap[i]++;
+    for(int i = 0; i < (inputKeys.length()/2)+1; i++){
+        frequencyMap[inputKeys[2*i]] = inputFrequenciesVector[i];
     }
 
     for(auto &it : frequencyMap){
@@ -112,24 +123,24 @@ void Huffman1Tree::sortedVectorOfCharacterFrequencyPairs() {
 
     std::sort(characterFrequencyVector.begin(), characterFrequencyVector.end(), combinedComparison);
 
-    //this part just prints the frequency vector
-    for(auto i: characterFrequencyVector){
-        cout << i.first << " ";
-    }
-    cout << endl;
-    for(auto i: characterFrequencyVector){
-        cout << i.second << " ";
-    }
-    cout << endl;
+//    //this part just prints the frequency vector
+//    for(auto i: characterFrequencyVector){
+//        cout << i.first << " ";
+//    }
+//    cout << endl;
+//    for(auto i: characterFrequencyVector){
+//        cout << i.second << " ";
+//    }
+//    cout << endl;
 }
 
-void Huffman1Tree::pop_front_on_vector(vector<Node*> &nodeVect) {
+void HuffmanDecoder::pop_front_on_vector(vector<Node*> &nodeVect) {
     if(nodeVect.size() > 0){
         nodeVect.erase(nodeVect.begin());
     }
 }
 
-void Huffman1Tree::nodeVectorPrint() {
+void HuffmanDecoder::nodeVectorPrint() {
     for(auto &i : nodeVector){
         cout << i->frequency << "\t";
     }
@@ -147,7 +158,7 @@ void Huffman1Tree::nodeVectorPrint() {
 
 }
 
-Node* Huffman1Tree::creatingTheTree() {
+Node* HuffmanDecoder::creatingTheTree() {
     // here we are pushing all the leaf nodes to the priority queue
     for(int i = 0; i < characterFrequencyVector.size(); i++){
         unsigned char tempChar = characterFrequencyVector[i].first;
@@ -187,7 +198,8 @@ Node* Huffman1Tree::creatingTheTree() {
 
 }
 
-void Huffman1Tree::getCodes(Node* root, string str){
+
+void HuffmanDecoder::getCodes(Node* root, string str){
     if(root == nullptr){
         return;
     }
@@ -205,39 +217,73 @@ void Huffman1Tree::getCodes(Node* root, string str){
 
 }
 
-string Huffman1Tree::printCodesForString() {
-    string outputString;
-    for(auto &i: inputString){
-        it = codeMap.find(i);
-        outputString += it->second;
+
+string HuffmanDecoder::stringDecoder(Node* root){
+    string outputString  = "";
+    Node* temp = root;
+    for(int i = 0; i < inputStringEncoded.length(); i++){
+        if(inputStringEncoded[i] == '0'){
+            temp = temp->Left;
+        }
+        else if(inputStringEncoded[i] == '1'){
+            temp = temp->Right;
+        }
+        if(!(temp->Left) && !(temp->Right)){
+            outputString += temp->character;
+            temp = root;
+        }
     }
     return outputString;
 }
 
-void Huffman1Tree::countBitsOriginal() {
-    unsigned int num = 0;
-    num = inputString.length()*8;
-    cout << "Total Bits (Original): " <<  num << endl;
-
+void HuffmanDecoder::stringDecoder2(Node* root, int &idx){
+    if(root == nullptr){
+        return ;
+    }
+    //if its a leaf node
+    if(!root->Left && !root->Right){
+        cout << root->character;
+        return;
+    }
+    idx++;
+    if (inputStringEncoded[idx] == '0'){
+        stringDecoder2(root->Left, idx);
+    }
+    else if(inputStringEncoded[idx] == '1'){
+        stringDecoder2(root->Right, idx);
+    }
 }
 
-void Huffman1Tree::countBitsEncoded(string binaryNumber) {
-    cout << "Total Bits (Coded): "  << binaryNumber.length() << endl;
-
+void HuffmanDecoder::outputString(Node* root){
+    int idx = -1;
+    Node* temp2 = root;
+    while(idx < int(inputStringEncoded.size()) -2){
+        stringDecoder2(temp2, idx);
+    }
 }
+
+//void HuffmanDecoder::countBitsOriginal() {
+//    unsigned int num = 0;
+//    num = inputString.length()*8;
+//    cout << "Total Bits (Original): " <<  num << endl;
+//
+//}
+//
+//void HuffmanDecoder::countBitsEncoded(string binaryNumber) {
+//    cout << "Total Bits (Coded): "  << binaryNumber.length() << endl;
+//
+//}
 
 
 int main(){
-    Huffman1Tree test;
+    HuffmanDecoder test;
     string stringOfCodes;
-    string output;
     test.sortedVectorOfCharacterFrequencyPairs();
     Node* root = test.creatingTheTree();
     test.getCodes(root, stringOfCodes);
-    output = test.printCodesForString();
-    cout << output << endl;
-    test.countBitsOriginal();
-    test.countBitsEncoded(output);
+    test.outputString(root);
+//    test.countBitsOriginal();
+//    test.countBitsEncoded(output);
 
     return 0;
 };
