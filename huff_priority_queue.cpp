@@ -11,9 +11,10 @@ class Node{
 public:
     unsigned char character;
     unsigned frequency;  // this is the frequency of the character
-    int priority = -1;
     Node* Left;
     Node* Right;
+    int asciiIndex;
+    int priority = -1;
 //    bool isLeaf; // decide if its a leaf when building a tree
 
     static Node* createNode(unsigned char ch, unsigned freq, Node* l, Node* r, int priority);
@@ -32,7 +33,7 @@ Node* Node::createNode(unsigned char ch, unsigned int freq, Node* l, Node* r, in
     node->frequency = freq;
     node->Left = l;
     node->Right = r;
-//    node->asciiIndex = int(ch);
+    node->asciiIndex = int(ch);
     node->priority = priority;
 //        isLeaf = false;
     return node;
@@ -42,6 +43,19 @@ Node* Node::createNode(unsigned char ch, unsigned int freq, Node* l, Node* r, in
 struct compare{
     bool operator()(Node* left, Node* right){
         return left->frequency > right->frequency;
+    }
+
+};
+struct combinedComparisonNodes{
+    bool operator()(Node* left, Node* right){
+        if(left->frequency == right->frequency){
+            int asciiIntA = left->priority;
+            int asciiIntB = right->priority;
+            return asciiIntA < asciiIntB;
+        }
+        else{
+            return left->frequency > right->frequency;
+        }
     }
 
 };
@@ -74,19 +88,19 @@ public:
     unsigned treeSize; //current size of the huffman tree
     unsigned treeCapacity; //capacity of the tree
     vector<Node*> nodeVector; //vector of node pointers
+    priority_queue<Node*, vector<Node*>, compare> priorityQueue;
+    priority_queue<Node*, vector<Node*>, compare> priorityQueueCopy;
     vector<pair<unsigned char, int>> characterFrequencyVector;
     vector<Node*> NodeHeap;
-    void nodeVectorPrint();
+    void priorityQueuePrint();
     string codeString;
-    Node* head;
 
     Huffman1Tree();
     void sortedVectorOfCharacterFrequencyPairs(); // this stores the input in a vector that is sorted according to the frequency of the characters
     void pop_front_on_vector(vector<Node*> &nodeVect);
-    void creatingTheTree();
+    Node* creatingTheTree();
     void getCodes(Node* root, string str);
     void printCodes();
-    void printTree();
 // traversing through the tree
 
 
@@ -130,66 +144,62 @@ void Huffman1Tree::pop_front_on_vector(vector<Node*> &nodeVect) {
     }
 }
 
-void Huffman1Tree::nodeVectorPrint() {
-    for(auto &i : nodeVector){
-        cout << i->frequency << " ";
-    }
-    cout << endl;
-    for(auto &i : nodeVector){
-        cout << i->character << " ";
-    }
-    cout << endl;
-    cout << endl;
-
-}
-void Huffman1Tree::printTree() {
-    if(head) {
-        cout << "Head Exists" << endl;
-    } else {
-        cout << "NO Head" << endl;
-
+void Huffman1Tree::priorityQueuePrint() {
+    for(int i = 0; i < priorityQueueCopy.size(); i++){
+        cout << priorityQueueCopy.top()->frequency << " ";
+        cout << priorityQueueCopy.top()->character << endl;
+        priorityQueueCopy.pop();
     }
 
 }
-void Huffman1Tree::creatingTheTree() {
 
-//     here we are pushing all the leaf nodes to the priority queue
-    for(auto & i : characterFrequencyVector){
-        unsigned char tempChar = i.first;
+Node* Huffman1Tree::creatingTheTree() {
+    // here we are pushing all the leaf nodes to the priority queue
+    for(int i = 0; i < characterFrequencyVector.size(); i++){
+        unsigned char tempChar = characterFrequencyVector[i].first;
         cout << tempChar << ": ";
-        int priorityAsciiChar = int(i.first);
+        int priorityAsciiChar = int(characterFrequencyVector[i].first);
         cout << priorityAsciiChar << endl;
-        Node* internalNodeLeaf = Node::createNode(tempChar, i.second, nullptr, nullptr, priorityAsciiChar);
-        nodeVector.push_back(internalNodeLeaf);
+        Node* internalNodeLeaf = Node::createNode(tempChar, characterFrequencyVector[i].second, nullptr, nullptr, priorityAsciiChar);
+        priorityQueue.push(internalNodeLeaf);
+        priorityQueueCopy.push(internalNodeLeaf);
     }
 
-    cout << "before editing" << endl;
-    nodeVectorPrint();
 
     cout << "after editing" << endl;
 //    extracting the 2 minimum leaves, adding them and pushing them to the queue
-    while(nodeVector.size() != 1){
-        Node* left = nodeVector.front();
-        pop_front_on_vector(nodeVector);
+    while(priorityQueue.size() != 1){
+        Node* left = priorityQueue.top();
+        priorityQueue.pop();
+        priorityQueueCopy.pop();
 
 
-        Node* right = nodeVector.front();
-        pop_front_on_vector(nodeVector);
+        Node* right = priorityQueue.top();
+        priorityQueue.pop();
+        priorityQueueCopy.pop();
 
 //      creating an internal node with the frequency equal to the sum of the left and right nodes
         int internalFrequency = left->frequency + right->frequency;
         Node* internalNode = Node::createNode('$', internalFrequency, left, right, left->asciiIndex + right->asciiIndex);
-        internalNode->createNode('$', internalFrequency, left, right); //'$' is a special value for internal nodes, not use
+//        internalNode->createNode('$', internalFrequency, left, right); //'$' is a special value for internal nodes, not use
 //      add this new node to the priority queue
-        nodeVector.push_back(internalNode);
+        priorityQueue.push(internalNode);
+        priorityQueueCopy.push(internalNode);
+
 
 
 //        this is where i need to reorder it
 
-        std::sort(nodeVector.begin(), nodeVector.end(), combinedComparisonNodes);
-        nodeVectorPrint();
-    }
+//        std::sort(nodeVector.begin(), nodeVector.end(), combinedComparisonNodes);
 
+    }
+    Node* root = priorityQueue.top();
+//    cout << "copy print" << endl;
+//    priorityQueuePrint();
+    cout << endl;
+    cout << endl;
+    cout << root->frequency << endl;
+    return root;
 
 
 //    //checking if all the nodes got pushed as leafs to the priority queue
@@ -227,17 +237,16 @@ void Huffman1Tree::getCodes(Node* root, string str) {
 }
 
 void Huffman1Tree::printCodes() {
-    getCodes(nodeVector[0], codeString);
+    getCodes(Huffman1Tree::creatingTheTree(), codeString);
 }
 
 
 int main(){
     Huffman1Tree test;
+    string codeString;
     test.sortedVectorOfCharacterFrequencyPairs();
-    test.creatingTheTree();
-    test.printTree();
-    test.printCodes();
+    Node* help = test.creatingTheTree();
+    test.getCodes(help, codeString);
 
     return 0;
 };
-
