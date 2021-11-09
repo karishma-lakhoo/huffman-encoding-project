@@ -238,7 +238,7 @@ string HuffmanDecoder::stringDecoder(Node* root){
             temp = temp->Right;
         }
         if(!(temp->Left) && !(temp->Right)){
-            outputString += curr->character;
+            outputString += temp->character;
             temp = root;
         }
     }
