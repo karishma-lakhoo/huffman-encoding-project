@@ -174,7 +174,7 @@ Node* Huffman1Tree::creatingTheTree() {
 //      creating an internal node with the frequency equal to the sum of the left and right nodes
         int internalFrequency = left->frequency + right->frequency;
 //        Node* internalNode = Node::createNode('$', internalFrequency, left, right, left->asciiIndex + right->asciiIndex);
-        Node* internalNode = Node::createNode('$', internalFrequency, left, right, (((float(left->priority + right->priority)/244)*61))+36);
+        Node* internalNode = Node::createNode('*', internalFrequency, left, right, (((float(left->priority + right->priority)/244)*55)+42));
 //        internalNode->createNode('$', internalFrequency, left, right); //'$' is a special value for internal nodes, not use
 //      add this new node to the priority queue
         nodeVector.push_back(internalNode);
@@ -210,19 +210,16 @@ void Huffman1Tree::getCodes(Node* root, string str) {
     if(root == nullptr){
         return;
     }
-    if(root->Left){
-        str = str + "0";
-        getCodes(root->Left, str);
-    }
-    if(root->Right){
-        str = str + "1";
-        getCodes(root->Right, str);
-    }
 //    this is for when it reaches a leaf node
     if(!(root->Left) && !(root->Right)){
         cout << root->character << " :" << str << endl;
     }
-
+    if(root->Left){
+        getCodes(root->Left, str + "0");
+    }
+    if(root->Right){
+        getCodes(root->Right, str + "1");
+    }
 
 }
 
@@ -233,11 +230,12 @@ void Huffman1Tree::printCodes() {
 
 int main(){
     Huffman1Tree test;
+    string stringOfCodes;
     test.sortedVectorOfCharacterFrequencyPairs();
     Node* root = test.creatingTheTree();
     cout << "freq" << endl;
     cout << root->frequency << endl;
-    test.printCodes();
+    test.getCodes(root, stringOfCodes);
 
     return 0;
 };
